@@ -1,0 +1,5 @@
+error[E0080]: evaluation panicked: CHOICE alternatives must have distinct tags
+ --> tests/ui/duplicate_choice_tags.rs:3:10
+  |
+3 | #[derive(Asn1)]
+  |          ^^^^ evaluation of `_` failed here

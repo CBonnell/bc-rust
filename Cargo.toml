@@ -1,5 +1,5 @@
 [workspace]
-members = ["cli", "crypto/*", "mem_usage_benches"]
+members = ["cli", "codec/*", "crypto/*", "mem_usage_benches"]
 
 [workspace.package]
 edition = "2024"
@@ -8,6 +8,8 @@ edition = "2024"
 
 # *** Internal Dependencies ***
 bouncycastle = { path = "./", version = "0.1.2" }
+bouncycastle-asn1 = { path = "./codec/asn1", version = "0.1.2" }
+bouncycastle-asn1-derive = { path = "./codec/asn1-derive", version = "0.1.2" }
 bouncycastle-base64 = { path = "./crypto/base64", version = "0.1.2" }
 bouncycastle-core = { path = "crypto/core", version = "0.1.2" }
 bouncycastle-core-test-framework = { path = "./crypto/core-test-framework", version = "0.1.2" }

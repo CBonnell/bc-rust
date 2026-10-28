@@ -1,0 +1,5 @@
+error: invalid constraint: constraints of different kinds (value, SIZE, FROM) can't be combined in one expression; repeat the `constraint` attribute to intersect them
+ --> tests/ui/mixed_kinds.rs:6:25
+  |
+6 |     #[asn1(constraint = "SIZE (1..4) | 5..9")]
+  |                         ^^^^^^^^^^^^^^^^^^^^

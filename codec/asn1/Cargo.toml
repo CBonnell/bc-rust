@@ -1,0 +1,26 @@
+[package]
+name = "bouncycastle-asn1"
+version = "0.1.2"
+edition.workspace = true
+description = "no_std, no-alloc ASN.1 BER/DER library built on a sans-io tokenizer"
+
+[features]
+default = []
+alloc = []
+heapless = ["dep:heapless"]
+ber-time = []
+derive = ["dep:bouncycastle-asn1-derive"]
+
+[dependencies]
+heapless = { version = "0.9", optional = true, default-features = false }
+bouncycastle-asn1-derive = { workspace = true, optional = true }
+
+[dev-dependencies]
+bouncycastle-asn1-derive.workspace = true
+proptest = "1"
+trybuild = "1"
+criterion.workspace = true
+
+[[bench]]
+name = "asn1_benches"
+harness = false

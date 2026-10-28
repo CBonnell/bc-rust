@@ -1,0 +1,174 @@
+error[E0277]: the trait bound `Implicit<0, Choice>: Decode<'_>` is not satisfied
+ --> tests/ui/implicit_choice.rs:9:10
+  |
+9 | #[derive(Asn1)]
+  |          ^^^^ the trait `DecodeValue<'_>` is not implemented for `Implicit<0, Choice>`
+  |
+help: the trait `DecodeValue<'_>` is implemented for `Implicit<N, T>`
+ --> src/types.rs
+  |
+  | impl<'a, const N: u32, T: DecodeValue<'a>> DecodeValue<'a> for Implicit<N, T> {
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  = note: required for `Implicit<0, Choice>` to implement `Decode<'_>`
+note: required by a bound in `SliceReader::<'a>::read`
+ --> src/reader.rs
+  |
+  |     pub fn read<T: Decode<'a>>(&mut self) -> Result<T, Error> {
+  |                    ^^^^^^^^^^ required by this bound in `SliceReader::<'a>::read`
+  = note: this error originates in the derive macro `Asn1` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `Choice: FixedTag` is not satisfied
+ --> tests/ui/implicit_choice.rs:9:10
+  |
+9 | #[derive(Asn1)]
+  |          ^^^^ unsatisfied trait bound
+  |
+help: the trait `FixedTag` is not implemented for `Choice`
+ --> tests/ui/implicit_choice.rs:4:1
+  |
+4 | enum Choice {
+  | ^^^^^^^^^^^
+  = help: the following other types implement trait `FixedTag`:
+            BitString<'_>
+            BmpString<'_>
+            Containing<'_, T>
+            Enumerated<'_>
+            Explicit<N, T>
+            GeneralizedTime
+            Ia5String<'_>
+            Implicit<N, T>
+          and $N others
+  = note: required for `Implicit<0, Choice>` to implement `FixedTag`
+  = note: required for `Implicit<0, Choice>` to implement `Decode<'_>`
+note: required by a bound in `SliceReader::<'a>::read`
+ --> src/reader.rs
+  |
+  |     pub fn read<T: Decode<'a>>(&mut self) -> Result<T, Error> {
+  |                    ^^^^^^^^^^ required by this bound in `SliceReader::<'a>::read`
+  = note: this error originates in the derive macro `Asn1` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `Choice: FixedTag` is not satisfied
+ --> tests/ui/implicit_choice.rs:9:10
+  |
+9 | #[derive(Asn1)]
+  |          ^^^^ unsatisfied trait bound
+  |
+help: the trait `FixedTag` is not implemented for `Choice`
+ --> tests/ui/implicit_choice.rs:4:1
+  |
+4 | enum Choice {
+  | ^^^^^^^^^^^
+  = help: the following other types implement trait `FixedTag`:
+            BitString<'_>
+            BmpString<'_>
+            Containing<'_, T>
+            Enumerated<'_>
+            Explicit<N, T>
+            GeneralizedTime
+            Ia5String<'_>
+            Implicit<N, T>
+          and $N others
+note: required by a bound in `Implicit::<N, T>::encoded_len_of`
+ --> src/types.rs
+  |
+  | impl<const N: u32, T: FixedTag + EncodeValue> Implicit<N, T> {
+  |                       ^^^^^^^^ required by this bound in `Implicit::<N, T>::encoded_len_of`
+  |     /// The encoded length of `inner` retagged `[N]`, without constructing the wrapper.
+  |     pub fn encoded_len_of(inner: &T) -> Result<u64, Error> {
+  |            -------------- required by a bound in this associated function
+  = note: this error originates in the derive macro `Asn1` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `Choice: EncodeValue` is not satisfied
+ --> tests/ui/implicit_choice.rs:9:10
+  |
+9 | #[derive(Asn1)]
+  |          ^^^^ unsatisfied trait bound
+  |
+help: the trait `ContentCodec<'_>` is not implemented for `Choice`
+ --> tests/ui/implicit_choice.rs:4:1
+  |
+4 | enum Choice {
+  | ^^^^^^^^^^^
+  = help: the following other types implement trait `ContentCodec<'a>`:
+            BitString<'a>
+            BmpString<'a>
+            Enumerated<'a>
+            GeneralizedTime
+            Ia5String<'a>
+            NamedBits<'a>
+            NumericString<'a>
+            OctetString<'a>
+          and $N others
+  = note: required for `Choice` to implement `EncodeValue`
+note: required by a bound in `Implicit::<N, T>::encoded_len_of`
+ --> src/types.rs
+  |
+  | impl<const N: u32, T: FixedTag + EncodeValue> Implicit<N, T> {
+  |                                  ^^^^^^^^^^^ required by this bound in `Implicit::<N, T>::encoded_len_of`
+  |     /// The encoded length of `inner` retagged `[N]`, without constructing the wrapper.
+  |     pub fn encoded_len_of(inner: &T) -> Result<u64, Error> {
+  |            -------------- required by a bound in this associated function
+  = note: this error originates in the derive macro `Asn1` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `Choice: FixedTag` is not satisfied
+ --> tests/ui/implicit_choice.rs:9:10
+  |
+9 | #[derive(Asn1)]
+  |          ^^^^ unsatisfied trait bound
+  |
+help: the trait `FixedTag` is not implemented for `Choice`
+ --> tests/ui/implicit_choice.rs:4:1
+  |
+4 | enum Choice {
+  | ^^^^^^^^^^^
+  = help: the following other types implement trait `FixedTag`:
+            BitString<'_>
+            BmpString<'_>
+            Containing<'_, T>
+            Enumerated<'_>
+            Explicit<N, T>
+            GeneralizedTime
+            Ia5String<'_>
+            Implicit<N, T>
+          and $N others
+note: required by a bound in `Implicit::<N, T>::encode_of`
+ --> src/types.rs
+  |
+  | impl<const N: u32, T: FixedTag + EncodeValue> Implicit<N, T> {
+  |                       ^^^^^^^^ required by this bound in `Implicit::<N, T>::encode_of`
+...
+  |     pub fn encode_of(inner: &T, w: &mut Writer<'_>) -> Result<(), Error> {
+  |            --------- required by a bound in this associated function
+  = note: this error originates in the derive macro `Asn1` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0277]: the trait bound `Choice: EncodeValue` is not satisfied
+ --> tests/ui/implicit_choice.rs:9:10
+  |
+9 | #[derive(Asn1)]
+  |          ^^^^ unsatisfied trait bound
+  |
+help: the trait `ContentCodec<'_>` is not implemented for `Choice`
+ --> tests/ui/implicit_choice.rs:4:1
+  |
+4 | enum Choice {
+  | ^^^^^^^^^^^
+  = help: the following other types implement trait `ContentCodec<'a>`:
+            BitString<'a>
+            BmpString<'a>
+            Enumerated<'a>
+            GeneralizedTime
+            Ia5String<'a>
+            NamedBits<'a>
+            NumericString<'a>
+            OctetString<'a>
+          and $N others
+  = note: required for `Choice` to implement `EncodeValue`
+note: required by a bound in `Implicit::<N, T>::encode_of`
+ --> src/types.rs
+  |
+  | impl<const N: u32, T: FixedTag + EncodeValue> Implicit<N, T> {
+  |                                  ^^^^^^^^^^^ required by this bound in `Implicit::<N, T>::encode_of`
+...
+  |     pub fn encode_of(inner: &T, w: &mut Writer<'_>) -> Result<(), Error> {
+  |            --------- required by a bound in this associated function
+  = note: this error originates in the derive macro `Asn1` (in Nightly builds, run with -Z macro-backtrace for more info)

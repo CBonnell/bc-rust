@@ -1,0 +1,5 @@
+error[E0080]: evaluation panicked: SET components must have distinct tags
+ --> tests/ui/duplicate_set_tags.rs:3:10
+  |
+3 | #[derive(Asn1)]
+  |          ^^^^ evaluation of `_` failed here

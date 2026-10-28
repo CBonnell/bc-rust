@@ -1,0 +1,22 @@
+error[E0277]: the trait bound `OctetString<'_>: RangeConstrainable` is not satisfied
+ --> tests/ui/range_on_octet_string.rs:4:10
+  |
+4 | #[derive(Asn1)]
+  |          ^^^^ the trait `RangeConstrainable` is not implemented for `OctetString<'_>`
+  |
+  = help: the following other types implement trait `RangeConstrainable`:
+            Enumerated<'_>
+            bouncycastle_asn1::Int<'_>
+            i128
+            i16
+            i32
+            i64
+            i8
+            u128
+          and $N others
+note: required by a bound in `check_range`
+ --> src/constraint.rs
+  |
+  | pub fn check_range<T: RangeConstrainable + ?Sized>(set: &IntervalSet, value: &T) -> bool {
+  |                       ^^^^^^^^^^^^^^^^^^ required by this bound in `check_range`
+  = note: this error originates in the derive macro `Asn1` (in Nightly builds, run with -Z macro-backtrace for more info)

@@ -1,0 +1,5 @@
+error[E0080]: evaluation panicked: OPTIONAL and DEFAULT fields must have tags distinct from the fields that can follow them
+ --> tests/ui/tag_ambiguity.rs:3:10
+  |
+3 | #[derive(Asn1)]
+  |          ^^^^ evaluation of `_` failed here

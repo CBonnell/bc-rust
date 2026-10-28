@@ -1,0 +1,5 @@
+error: invalid constraint: `CONTAINING` is not supported; use the `Containing<'a, T>` field type instead
+ --> tests/ui/unsupported_containing.rs:6:25
+  |
+6 |     #[asn1(constraint = "CONTAINING Foo")]
+  |                         ^^^^^^^^^^^^^^^^

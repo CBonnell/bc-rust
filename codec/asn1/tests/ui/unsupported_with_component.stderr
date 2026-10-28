@@ -1,0 +1,5 @@
+error: invalid constraint: `WITH` is not supported; use `validate = path` instead
+ --> tests/ui/unsupported_with_component.rs:6:25
+  |
+6 |     #[asn1(constraint = "WITH COMPONENTS { a PRESENT }")]
+  |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

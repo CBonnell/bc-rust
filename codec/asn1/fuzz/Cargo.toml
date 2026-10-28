@@ -1,0 +1,66 @@
+[package]
+name = "bouncycastle-asn1-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+arbitrary = { version = "1", features = ["derive"] }
+bouncycastle-asn1 = { path = "..", features = ["ber-time", "alloc"] }
+bouncycastle-asn1-derive = { path = "../../asn1-derive" }
+der = { version = "0.7", features = ["alloc"] }
+
+[workspace]
+
+[[bin]]
+name = "header"
+path = "fuzz_targets/header.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "tokenizer_chunked"
+path = "fuzz_targets/tokenizer_chunked.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "tokenizer_vs_slice"
+path = "fuzz_targets/tokenizer_vs_slice.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "primitives"
+path = "fuzz_targets/primitives.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "der_differential"
+path = "fuzz_targets/der_differential.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "der_roundtrip"
+path = "fuzz_targets/der_roundtrip.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "ber_time"
+path = "fuzz_targets/ber_time.rs"
+test = false
+doc = false
+bench = false

@@ -1,0 +1,13 @@
+[package]
+name = "bouncycastle-asn1-derive"
+version = "0.1.2"
+edition.workspace = true
+description = "Derive and oid! macros for bouncycastle-asn1"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "2", features = ["full", "extra-traits", "visit-mut"] }
+quote = "1"
+proc-macro2 = "1"
