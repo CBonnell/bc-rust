@@ -382,13 +382,28 @@ fn ber_time_forms() {
 
 #[test]
 fn constructed_times_decode_by_copying_segments() {
-    // UTCTime 910506234540Z split over two OCTET-STRING-like UTCTime segments.
-    let bytes = hex("37 80 17 04 39 31 30 35 17 09 30 36 32 33 34 35 34 30 5A 00 00");
+    // UTCTime 910506234540Z split over two OCTET STRING segments.
+    let bytes = hex("37 80 04 04 39 31 30 35 04 09 30 36 32 33 34 35 34 30 5A 00 00");
     let t = dec::<UtcTime>(&bytes, &Config::BER).unwrap();
     assert_eq!((t.year, t.month, t.second), (1991, 5, 40));
     assert_eq!(
         dec::<UtcTime>(&bytes, &Config::DER).unwrap_err().kind(),
         &ErrorKind::ConstructedNotAllowed
+    );
+    let nested = hex("37 80 04 04 39 31 30 35 24 80 04 09 30 36 32 33 34 35 34 30 5A 00 00 00 00");
+    assert_eq!(dec::<UtcTime>(&nested, &Config::BER).unwrap().second, 40);
+    let implicit = hex("A0 80 04 04 39 31 30 35 04 09 30 36 32 33 34 35 34 30 5A 00 00");
+    assert_eq!(dec::<Implicit<0, UtcTime>>(&implicit, &Config::BER).unwrap().0.second, 40);
+    let wrong = |found| ErrorKind::UnexpectedTag { expected: Some(Tag::OCTET_STRING), found };
+    let repeated = hex("37 80 17 04 39 31 30 35 17 09 30 36 32 33 34 35 34 30 5A 00 00");
+    assert_eq!(
+        dec::<UtcTime>(&repeated, &Config::BER).unwrap_err().kind(),
+        &wrong(Tag::UTC_TIME)
+    );
+    let repeated = hex("A0 80 80 04 39 31 30 35 80 09 30 36 32 33 34 35 34 30 5A 00 00");
+    assert_eq!(
+        dec::<Implicit<0, UtcTime>>(&repeated, &Config::BER).unwrap_err().kind(),
+        &wrong(Tag::context(0))
     );
 }
 

@@ -4,7 +4,7 @@
 //! [`ContentValidator`] closest to the tokenizer and [`StringReassembler`] outside it:
 //! `StringReassembler::new(ContentValidator::new(Tokenizer::<32>::new(config)))`.
 
-use crate::header::is_string_type;
+use crate::header::{is_string_type, segment_tag};
 use crate::primitives::strings::{
     BmpString, Ia5String, NumericString, PrintableString, UniversalString, VisibleString,
 };
@@ -247,7 +247,8 @@ impl<S: EventSource> ContentValidator<S> {
     fn on_header(&mut self, header: &crate::Header<'_>, depth: usize) -> Result<(), Error> {
         self.rules = self.inner.rules();
         let tag = header.tag();
-        if let Some(expected) = self.time.as_ref().map(|t| t.tag).or(self.outer_string_tag()) {
+        let outer = self.time.as_ref().map(|t| t.tag).or(self.outer_string_tag());
+        if let Some(expected) = outer.map(segment_tag) {
             if tag != expected {
                 let kind = ErrorKind::UnexpectedTag { expected: Some(expected), found: tag };
                 return Err(Error::new(kind, header.offset()));
@@ -401,8 +402,8 @@ struct Outer {
 /// rejected under DER.
 ///
 /// It applies to every universal string type: OCTET STRING, BIT STRING, all character strings,
-/// and UTCTime and GeneralizedTime. Every segment must be a primitive or constructed encoding of
-/// the same universal type, nested to any depth within the stack limit.
+/// and UTCTime and GeneralizedTime. Segments are BIT STRINGs for BIT STRING and OCTET STRINGs
+/// otherwise, nested to any depth within the stack limit.
 ///
 /// For BIT STRING, every segment except the last must have zero unused bits. The Content chunks
 /// of a BIT STRING, reassembled or not, carry the data octets alone with every unused-bits
@@ -476,9 +477,10 @@ impl<S: EventSource> EventSource for StringReassembler<S> {
                         });
                     }
                     Some(outer) => {
-                        if header.tag() != outer.tag {
+                        let expected = segment_tag(outer.tag);
+                        if header.tag() != expected {
                             let kind = ErrorKind::UnexpectedTag {
-                                expected: Some(outer.tag),
+                                expected: Some(expected),
                                 found: header.tag(),
                             };
                             return Err(Error::new(kind, header.offset()));

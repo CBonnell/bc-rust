@@ -59,7 +59,7 @@ impl<'a, T: ContentCodec<'a>> DecodeValue<'a> for T {
             return Err(Error::new(ErrorKind::ConstructedNotAllowed, header.offset()));
         }
         let mut copy = [0u8; 32];
-        let len = contents.copy_segments(header.tag(), T::MAX_COPY_LEN, &mut copy)?;
+        let len = contents.copy_segments(T::MAX_COPY_LEN, &mut copy)?;
         let bytes = copy.get(..len).unwrap_or(&[]);
         T::decode_from_copy(bytes, rules).map_err(invalid)
     }

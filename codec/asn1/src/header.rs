@@ -42,6 +42,12 @@ pub(crate) fn is_string_type(tag: Tag) -> bool {
     tag.class == Class::Universal && matches!(tag.number, 3 | 4 | 7 | 12 | 18..=30)
 }
 
+/// The tag of each segment of a constructed `outer` string: BIT STRING for BIT STRING, else
+/// OCTET STRING (X.690 8.6.4, 8.7.3, 8.23.5).
+pub(crate) fn segment_tag(outer: Tag) -> Tag {
+    if outer == Tag::BIT_STRING { Tag::BIT_STRING } else { Tag::OCTET_STRING }
+}
+
 impl<'a> Header<'a> {
     /// Decodes a header from the start of `input`.
     ///

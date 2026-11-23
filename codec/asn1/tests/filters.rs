@@ -102,12 +102,73 @@ fn bit_strings_strip_unused_bits_octets() {
 }
 
 #[test]
-fn segments_must_share_the_universal_type() {
-    let e = outcome("24 80 04 01 AA 03 02 00 FF 00 00", Config::BER, usize::MAX).unwrap_err();
-    assert_eq!(
-        e.0,
-        ErrorKind::UnexpectedTag { expected: Some(Tag::OCTET_STRING), found: Tag::BIT_STRING }
-    );
+fn segments_must_carry_the_segment_tag() {
+    fn wrong_tag(data: &str, expected: Tag, found: Tag, offset: u64) {
+        for chunk in [usize::MAX, 1, 2] {
+            assert_eq!(
+                outcome(data, Config::BER, chunk),
+                Err((ErrorKind::UnexpectedTag { expected: Some(expected), found }, offset)),
+                "{data} chunk {chunk}"
+            );
+        }
+    }
+    wrong_tag("24 80 04 01 AA 03 02 00 FF 00 00", Tag::OCTET_STRING, Tag::BIT_STRING, 5);
+    wrong_tag("23 80 04 01 00 00 00", Tag::BIT_STRING, Tag::OCTET_STRING, 2);
+    wrong_tag("2C 80 0C 01 41 00 00", Tag::OCTET_STRING, Tag::UTF8_STRING, 2);
+    wrong_tag("36 06 16 01 41 16 01 42", Tag::OCTET_STRING, Tag::IA5_STRING, 2);
+    wrong_tag("33 80 04 01 41 13 01 42 00 00", Tag::OCTET_STRING, Tag::PRINTABLE_STRING, 5);
+    wrong_tag("2C 80 03 02 00 41 00 00", Tag::OCTET_STRING, Tag::BIT_STRING, 2);
+    wrong_tag("2C 80 24 80 0C 01 41 00 00 00 00", Tag::OCTET_STRING, Tag::UTF8_STRING, 4);
+}
+
+/// Examples from draft-housley-asn1-layman-guide.
+#[test]
+fn layman_guide_constructed_examples_reassemble() {
+    for (der, ber) in [
+        // 5.7 IA5String "test1@example.com", definite and indefinite.
+        (
+            "16 11 74 65 73 74 31 40 65 78 61 6D 70 6C 65 2E 63 6F 6D",
+            "36 17 04 05 74 65 73 74 31 04 01 40 04 0B 65 78 61 6D 70 6C 65 2E 63 6F 6D",
+        ),
+        (
+            "16 11 74 65 73 74 31 40 65 78 61 6D 70 6C 65 2E 63 6F 6D",
+            "36 80 04 05 74 65 73 74 31 04 01 40 04 0B 65 78 61 6D 70 6C 65 2E 63 6F 6D 00 00",
+        ),
+        // 5.11 OCTET STRING.
+        ("04 08 01 23 45 67 89 AB CD EF", "24 0C 04 04 01 23 45 67 04 04 89 AB CD EF"),
+        // 5.12 PrintableString "Test User 1", definite and indefinite.
+        (
+            "13 0B 54 65 73 74 20 55 73 65 72 20 31",
+            "33 0F 04 05 54 65 73 74 20 04 06 55 73 65 72 20 31",
+        ),
+        (
+            "13 0B 54 65 73 74 20 55 73 65 72 20 31",
+            "33 80 04 05 54 65 73 74 20 04 06 55 73 65 72 20 31 00 00",
+        ),
+        // 5.18 T61String "clés publiques".
+        (
+            "14 0F 63 6C C2 65 73 20 70 75 62 6C 69 71 75 65 73",
+            "34 15 04 05 63 6C C2 65 73 04 01 20 04 09 70 75 62 6C 69 71 75 65 73",
+        ),
+        // 5.21 UTF8String U+D55C U+AD6D U+C5B4, definite and indefinite.
+        ("0C 09 ED 95 9C EA B5 AD EC 96 B4", "2C 0D 04 03 ED 95 9C 04 06 EA B5 AD EC 96 B4"),
+        (
+            "0C 09 ED 95 9C EA B5 AD EC 96 B4",
+            "2C 80 04 03 ED 95 9C 04 06 EA B5 AD EC 96 B4 00 00",
+        ),
+        // Nested segment.
+        ("0C 02 41 42", "2C 80 24 80 04 01 41 00 00 04 01 42 00 00"),
+    ] {
+        let primitive = valid(der, Config::DER);
+        let events = valid(ber, Config::BER);
+        assert_eq!(content_of(&events), content_of(&primitive), "{ber}");
+        let Ev::Header { tag: der_tag, .. } = &primitive[0] else { panic!("{der}") };
+        assert!(
+            matches!(&events[0], Ev::Header { tag, constructed: false, depth: 0, .. } if tag == der_tag),
+            "{ber}"
+        );
+        assert_eq!(events.len(), 3, "{ber}: {events:?}");
+    }
 }
 
 #[test]
@@ -153,10 +214,10 @@ fn strings_are_validated_incrementally() {
     invalid("1C 06 00 00 00 41 00 00", Config::DER, ValueError::InvalidLength, 0);
     invalid("1C 04 00 11 00 00", Config::DER, ValueError::InvalidCharacterEncoding, 5);
     // A character may straddle segments of a constructed string.
-    let events = valid("2C 80 0C 02 ED 95 0C 01 9C 00 00", Config::BER);
+    let events = valid("2C 80 04 02 ED 95 04 01 9C 00 00", Config::BER);
     assert_eq!(content_of(&events), [0xED, 0x95, 0x9C]);
     invalid(
-        "2C 80 0C 02 ED 95 0C 01 28 00 00",
+        "2C 80 04 02 ED 95 04 01 28 00 00",
         Config::BER,
         ValueError::InvalidCharacterEncoding,
         8,
@@ -168,7 +229,7 @@ fn strings_are_validated_incrementally() {
 #[test]
 fn times_are_copied_across_segments_and_decoded_at_the_end() {
     valid("17 0D 39 31 30 35 30 36 32 33 34 35 34 30 5A", Config::DER);
-    let constructed = "37 80 17 04 39 31 30 35 17 09 30 36 32 33 34 35 34 30 5A 00 00";
+    let constructed = "37 80 04 04 39 31 30 35 04 09 30 36 32 33 34 35 34 30 5A 00 00";
     valid(constructed, Config::BER);
     invalid(
         "17 0D 39 37 30 32 32 39 30 30 30 30 30 30 5A",
@@ -183,14 +244,14 @@ fn times_are_copied_across_segments_and_decoded_at_the_end() {
         0,
     );
     // Longer than the longest valid time is rejected as soon as it exceeds it.
-    let long = "37 80 17 08 30 30 30 30 30 30 30 30 17 08 30 30 30 30 30 30 30 30 17 08 30 30 30 30 30 30 30 30 00 00";
+    let long = "37 80 04 08 30 30 30 30 30 30 30 30 04 08 30 30 30 30 30 30 30 30 04 08 30 30 30 30 30 30 30 30 00 00";
     invalid(long, Config::BER, ValueError::InvalidLength, 25);
     // The stack copies the segments of a nested definite-length constructed time.
-    valid("37 13 17 04 39 31 30 35 37 0B 17 09 30 36 32 33 34 35 34 30 5A", Config::BER);
+    valid("37 13 04 04 39 31 30 35 24 0B 04 09 30 36 32 33 34 35 34 30 5A", Config::BER);
     assert_eq!(
-        outcome("37 80 04 01 39 00 00", Config::BER, 3),
+        outcome("37 80 17 01 39 00 00", Config::BER, 3),
         Err((
-            ErrorKind::UnexpectedTag { expected: Some(Tag::UTC_TIME), found: Tag::OCTET_STRING },
+            ErrorKind::UnexpectedTag { expected: Some(Tag::OCTET_STRING), found: Tag::UTC_TIME },
             2
         ))
     );

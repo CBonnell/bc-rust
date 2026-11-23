@@ -289,12 +289,9 @@ impl<'a> SliceReader<'a> {
         Ok(rest)
     }
 
-    pub(crate) fn copy_segments(
-        &mut self,
-        tag: Tag,
-        max: usize,
-        out: &mut [u8; 32],
-    ) -> Result<usize, Error> {
+    /// Copies the OCTET STRING segments of a constructed encoding into `out`.
+    pub(crate) fn copy_segments(&mut self, max: usize, out: &mut [u8; 32]) -> Result<usize, Error> {
+        let tag = Tag::OCTET_STRING;
         let mut len = 0;
         self.walk(|event| {
             match event {
